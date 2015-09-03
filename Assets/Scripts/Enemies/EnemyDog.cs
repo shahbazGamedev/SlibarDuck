@@ -2,6 +2,10 @@
 using UnityEngine;
 //using System.Collections;
 
+//todo:	Faire en sorte que les ennemis puissent mourir par le biais
+//		d'objets poussé.
+//		Ou par un fusils
+
 [RequireComponent(typeof(CharacterController))]
 public class EnemyDog : MonoBehaviour {
 
