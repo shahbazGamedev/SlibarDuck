@@ -18,10 +18,23 @@ public class EnemyDog : MonoBehaviour {
 	private bool _isGrounded;
 	public Transform GroundCheckA;
 	public Transform GroundCheckB;
+	
+	// Check Wall
+	public Transform WallCheckA;
+	public Transform WallCheckB;
+	
+	// Check if Visible
+	private Renderer _renderer;
+	public bool StartOnView; 
+	private bool _go = false;
 
 	void Start () {
 		_currentDirection = StartDirection;
 		_cc = GetComponent<CharacterController>();
+		_renderer = GetComponent<Renderer>();
+		if (StartOnView == false) {
+			_go = true;
+		}
 	}
 	
 	public void SetVelocityDirection(){
@@ -53,10 +66,21 @@ public class EnemyDog : MonoBehaviour {
 		}
 	}
 	
+	void Update(){
+		if (_go == false){
+			_go = _renderer.IsVisibleFrom(Camera.main);
+		}
+	}
+	
+	
 	void FixedUpdate() {
+		if (_go == false){
+			return;
+		}
 		if (Smart){
 			CheckCliff();
 		}
+		CheckWall();
 		CheckDirection();
 		ApplyDirection();
     }
@@ -73,6 +97,16 @@ public class EnemyDog : MonoBehaviour {
 			return;
 		}
     }
+	
+	void CheckWall(){
+		if (_cc.isGrounded == false){
+			return;
+		}
+		if (Physics.Linecast(transform.position, WallCheckA.position, 1 << LayerMask.NameToLayer("Ground"))) SwitchDirection();
+		if (Physics.Linecast(transform.position, WallCheckB.position, 1 << LayerMask.NameToLayer("Ground"))) SwitchDirection();
+		if (Physics.Linecast(transform.position, WallCheckA.position, 1 << LayerMask.NameToLayer("Enemies"))) SwitchDirection();
+		if (Physics.Linecast(transform.position, WallCheckB.position, 1 << LayerMask.NameToLayer("Enemies"))) SwitchDirection();
+	}
 	
     void ApplyDirection() {
 		_cc.Move(_v * Time.deltaTime);	
