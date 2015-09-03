@@ -1,5 +1,4 @@
 ﻿//using System;
-using System;
 using UnityEngine;
 //using System.Collections;
 
@@ -7,7 +6,6 @@ using UnityEngine;
 public class EnemyDog : MonoBehaviour {
 
 	public float Speed = 2f;
-	public bool Smart = true;
 
 	public E_Direction StartDirection = E_Direction.LEFT;
 	private E_Direction _currentDirection;
@@ -15,15 +13,15 @@ public class EnemyDog : MonoBehaviour {
 	
 	private Vector3 _v;
 	
-	private Collider[] _colliders; 
+	// Check Cliff
+	public bool Smart = true;
+	private bool _isGrounded;
+	public Transform GroundCheckA;
+	public Transform GroundCheckB;
 
 	void Start () {
 		_currentDirection = StartDirection;
 		_cc = GetComponent<CharacterController>();
-		_colliders = GetComponentsInChildren<Collider>();
-	}
-	
-	void Update () {
 	}
 	
 	public void SetVelocityDirection(){
@@ -56,17 +54,26 @@ public class EnemyDog : MonoBehaviour {
 	}
 	
 	void FixedUpdate() {
-		CheckCliff();
+		if (Smart){
+			CheckCliff();
+		}
 		CheckDirection();
 		ApplyDirection();
     }
 
     void CheckCliff() {
-		var c = Physics.OverlapSphere(transform.position - Vector3.up + Vector3.right * -1, 0.25f);
-		var d = Physics.OverlapSphere(transform.position - Vector3.up + Vector3.right * -1, 0.25f);
-		
+		_isGrounded = Physics.Linecast(transform.position, GroundCheckA.position, 1 << LayerMask.NameToLayer("Ground"));
+		if (_isGrounded == false){
+			SwitchDirection();
+			return;
+		}
+		_isGrounded = Physics.Linecast(transform.position, GroundCheckB.position, 1 << LayerMask.NameToLayer("Ground"));
+		if (_isGrounded == false){
+			SwitchDirection();
+			return;
+		}
     }
-
+	
     void ApplyDirection() {
 		_cc.Move(_v * Time.deltaTime);	
     }
