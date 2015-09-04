@@ -79,10 +79,4 @@ public class PlayerInputs : MonoBehaviour {
 		CheckMovements();
 		ApplyMovements();
 	}
-	
-	void OnGui(){
-		if (GUI.Button(new Rect(10,10,10,10), "toto")){
-			
-		}
-	}
 }

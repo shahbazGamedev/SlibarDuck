@@ -1,4 +1,5 @@
 ﻿//using System;
+using System;
 using System.Collections;
 using UnityEngine;
 //using System.Collections;
@@ -15,6 +16,9 @@ public class Player : MonoBehaviour {
 	public E_PlayerState CurrentPlayerState;
 	public float CurrentTimeLevel;
     private bool _god;
+	
+	public E_Direction NextRotationDirection = E_Direction.NONE;
+	public  bool RotationRunning;
 
 
     //private GameObject _camera;
@@ -23,30 +27,30 @@ public class Player : MonoBehaviour {
     void Start () {
 		//_camera = GameObject.Find("Main Camera");
 	}
-	
-	// Update is called once per frame
-	void Update () {
-		CurrentTimeLevel += Time.deltaTime;
-	}
+
+    // Update is called once per frame
+    void Update() {
+        CurrentTimeLevel += Time.deltaTime;
+
+        if (RotationRunning) {
+            transform.rotation = Quaternion.Lerp(transform.rotation, _targetRotation, 25 * Time.deltaTime);
+        }
+    }
 	
 	void OnTriggerEnter(Collider other){
 		if (other.tag == "Item"){
 			CurrentPlayerState = other.GetComponent<ItemPowerUp>().ItemEffect;
 		}
 		if (other.tag == "Pivot"){
-			var rp = other.GetComponent<RotationPivot>();
-			rp.MakeRotation();
+			// useless tmp
 		}
 	}
 	
 	void OnTriggerExit(Collider other){
-		if (other.tag == "Pivot") {
-			var o = other.GetComponent<RotationPivot>();
-			if (o.RotationDirection == E_Direction.LEFT){
-				o.RotationDirection = E_Direction.RIGHT;
-			} else if (o.RotationDirection == E_Direction.RIGHT){
-				o.RotationDirection = E_Direction.LEFT;
-			}
+		return;
+		if (other.tag == "Pivot"){
+			transform.rotation = _targetRotation;
+			transform.position = new Vector3(other.transform.localPosition.x, transform.localPosition.x, other.transform.localPosition.z);
 		}
 	}
 	
@@ -56,6 +60,30 @@ public class Player : MonoBehaviour {
 			p.AddForce(Input.GetAxis("Horizontal") * hit.transform.right * 20);
 		}
 	}
+
+	public void FixedUpdate(){
+
+	}
+
+	private Quaternion _targetRotation;
+
+    public object TargetRotation { get{return _targetRotation;} }
+
+    public void ExecRotation(){
+		RotationRunning = true;
+		switch (NextRotationDirection) {
+			case E_Direction.LEFT:
+			_targetRotation = transform.rotation * new Quaternion(0, -Mathf.Sqrt(0.5f), 0, Mathf.Sqrt(0.5f));
+			NextRotationDirection = E_Direction.NONE; 
+			break;
+			case E_Direction.RIGHT:
+			_targetRotation = transform.rotation * new Quaternion(0, Mathf.Sqrt(0.5f), 0, Mathf.Sqrt(0.5f));
+			NextRotationDirection = E_Direction.NONE;
+			break;
+			case E_Direction.NONE:
+			break;
+		}
+    }
 
     public void HitByEnemy(){
 		if (CurrentPlayerState == E_PlayerState.NOTHING && !_god){
