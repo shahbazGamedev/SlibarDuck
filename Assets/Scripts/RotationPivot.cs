@@ -6,7 +6,7 @@ public class RotationPivot : MonoBehaviour {
 	public E_Direction RotationDirection;
 	//private GameObject _camera;
 	private GameObject _player;
-	private bool GoRotation = false;
+	static private bool _rotationRunning = false;
 	
 	//private float _wValue = 1;
 	//private float _xValue = 0;
@@ -22,33 +22,52 @@ public class RotationPivot : MonoBehaviour {
 		
 	}
 
+	private Quaternion _initRotation;
+	private Coroutine _curCoroutine;
+    static private bool _already;
+
     public void MakeRotation(){
+		if (_rotationRunning == true){
+			_rotationRunning = false;
+			transform.rotation = _target;
+			_player.transform.parent = null;
+			if (_curCoroutine != null){
+				StopCoroutine(_curCoroutine);
+			}
+		}
+		_initRotation = transform.rotation;
+		_rotationRunning = true;
 		//_camera.GetComponent<CameraPlayer>().GoRot = true;
 		//_camera.transform.parent = transform;
 
+		
 		if (RotationDirection == E_Direction.LEFT){
-			_target = new Quaternion(0, -Mathf.Sqrt(0.5f), 0, Mathf.Sqrt(0.5f));
+			_target = _initRotation * new Quaternion(0, -Mathf.Sqrt(0.5f), 0, Mathf.Sqrt(0.5f));
 		} else if (RotationDirection == E_Direction.RIGHT) {
-			_target = Quaternion.identity;
+			//_target = Quaternion.identity;
+			_target = _initRotation * new Quaternion(0, Mathf.Sqrt(0.5f), 0, Mathf.Sqrt(0.5f));
 		}
 		_player.transform.parent = transform;
-		GoRotation = true;
-		StopCoroutine(StopRotation());
-		StartCoroutine(StopRotation());
+		_curCoroutine = StartCoroutine(StopRotation());
+		_already = true;
 	}
 	
 	IEnumerator StopRotation(){
+		if (_already){
+			yield return null;
+		}
 		yield return new WaitForSeconds(1f);
-		GoRotation = false;
+		_rotationRunning = false;
 		//_camera.GetComponent<CameraPlayer>().GoRot = false;
 		transform.rotation = _target;
 		//_camera.transform.parent = null;
 		_player.transform.parent = null;
+		_already = false;
 	}
 	
 	void Update(){	
 
-		if (GoRotation == true){
+		if (_rotationRunning == true){
 			//transform.rotation = Quaternion.Slerp(transform.rotation, _target, Time.deltaTime * 1.5f);
 			transform.localRotation = Quaternion.Slerp(transform.localRotation, _target, Time.deltaTime * 5);
 		}
